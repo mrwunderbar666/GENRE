@@ -7,8 +7,9 @@ from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import jsonlines
-from mgenre.base_model import mGENRE
-from mgenre.utils import add_to_trie, chunk_it, extract_pages
+from genre.hf_model import mGENRE
+from genre.utils import chunk_it, extract_pages
+from genre.trie import Trie, MarisaTrie
 from tqdm.auto import tqdm, trange
 
 if __name__ == "__main__":
@@ -61,11 +62,11 @@ if __name__ == "__main__":
     args.allowed_langs = set(args.allowed_langs.split("|"))
 
     mgenre = mGENRE.from_pretrained(
-        "models/mbart.cc100",
-        checkpoint_file="model.pt",
-        bpe="sentencepiece",
-        layernorm_embedding=True,
-        sentencepiece_model="models/mbart.cc100/spm_256000.model",
+        "facebook/mgenre-wiki",
+        # checkpoint_file="model.pt",
+        # bpe="sentencepiece",
+        # layernorm_embedding=True,
+        # sentencepiece_model="models/mbart.cc100/spm_256000.model",
     ).eval()
 
     if args.action == "titles":
@@ -73,6 +74,7 @@ if __name__ == "__main__":
         filename = os.path.join(
             args.base_wikidata, "lang_title2wikidataID-normalized.pkl"
         )
+        filename = "../data/en_de_title2wikidataID-normalized_with_redirect.pkl"
         logging.info("Loading {}".format(filename))
         with open(filename, "rb") as f:
             lang_title2wikidataID = pickle.load(f)
@@ -110,10 +112,10 @@ if __name__ == "__main__":
                     lang_codes[lang] = mgenre.encode("{} >>".format(lang)).tolist()
                 lang2titles2bpes[lang][title] = [2] + lang_codes[lang][1:-1] + bpes[1:]
 
-        trie = {}
+        trie = Trie()
         for lang in sorted(args.allowed_langs):
             for sequence in tqdm(lang2titles2bpes[lang].values(), desc=lang):
-                add_to_trie(sequence, trie)
+                trie.add(sequence)
 
         if args.action == "titles_lang_trie_append":
             filename = os.path.join(args.base_wikidata, "titles_lang_all105_trie.pkl")

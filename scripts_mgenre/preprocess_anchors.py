@@ -10,7 +10,7 @@ import os
 import pickle
 import re
 
-from mgenre.utils import chunk_it, get_wikidata_ids
+from genre.utils import chunk_it, get_wikidata_ids
 from tqdm.auto import tqdm, trange
 
 

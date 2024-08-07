@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 from collections import defaultdict
 from urllib.parse import unquote
 
+import bs4
 from bs4 import BeautifulSoup
 
 from genre.entity_linking import (
